@@ -210,7 +210,29 @@ void D3D10Renderer::present()
 
 void D3D10Renderer::render()
 {
+	m_pD3D10Device->IASetPrimitiveTopology(
+		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	m_pD3D10Device->IASetInputLayout(m_pTempVertexLayout);
 
+	UINT stride = sizeof( Vertex );
+	UINT offset = 0;
+
+	m_pD3D10Device->IASetVertexBuffers(
+		0,
+		1,
+		&m_pTempBuffer,
+		&stride,
+		&offset);
+
+	D3D10_TECHNIQUE_DESC techniqueDesc;
+	m_pTempTechnique->GetDesc(&techniqueDesc);
+
+	for(unsigned int i = 0; i < techniqueDesc.Passes;++i)
+	{
+		ID3D10EffectPass *pCurrentPass = m_pTempTechnique->GetPassByIndex(i);
+		pCurrentPass->Apply(0);
+		m_pD3D10Device->Draw(3,0);
+	}
 }
 
 bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
