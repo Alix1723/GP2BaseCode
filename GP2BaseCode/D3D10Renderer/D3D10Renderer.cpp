@@ -88,6 +88,7 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createInitialRenderTarget(width,height))
 		return false;
+	//Initiate functions
 
 	return true;
 }
