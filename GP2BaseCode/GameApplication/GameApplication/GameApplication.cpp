@@ -91,3 +91,29 @@ bool CGameApplication::initGame()
 {
 	return true;
 }	
+
+//Called to start the game loop
+void CGameApplication::run()
+{
+	//while the window is not closed
+	{
+		//check for all windows messages
+		m_pWindow->checkForWindowMessages();
+		//update
+		update();
+		//render
+		render();
+	}
+}
+
+//Render, called to draw one frame of the game
+void CGameApplication::render()
+{
+
+}
+
+//Update, called to update the game
+void CGameApplication::update()
+{
+
+}
