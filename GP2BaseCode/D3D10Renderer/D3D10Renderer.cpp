@@ -19,6 +19,7 @@ const D3D10_INPUT_ELEMENT_DESC VertexLayout[] =
 	0 },
 };
 
+//A simple default Effect
 const char basicEffect[]=\
 	"float4 VS( float4 Pos : POSITION ) : SV_POSITION"\
 	"{"\
@@ -38,8 +39,10 @@ const char basicEffect[]=\
 	"		}"\
 	"}";
 
+//Constructor for D3D10Renderer
 D3D10Renderer::D3D10Renderer()
-{
+{	
+	//Initializes all required objects
 	m_pD3D10Device=NULL;
 	m_pRenderTargetView=NULL;
 	m_pSwapChain=NULL;
@@ -49,14 +52,15 @@ D3D10Renderer::D3D10Renderer()
 	m_pTempEffect = NULL;
 	m_pTempTechnique = NULL;
 	m_pTempBuffer = NULL;
-	//m_pTempVertexLayout = NULL;
+	m_pTempVertexLayout = NULL;
 }
 
+//Deconstructor
 D3D10Renderer::~D3D10Renderer()
 {
+	//If an object exists, clear it up/release it
 	if (m_pD3D10Device)
 		m_pD3D10Device->ClearState();
-
 	if (m_pRenderTargetView)
 		m_pRenderTargetView->Release();
 	if (m_pDepthStencelView)
@@ -70,54 +74,57 @@ D3D10Renderer::~D3D10Renderer()
 	if(m_pTempEffect)
 		m_pTempEffect->Release();
 	if(m_pTempVertexLayout)
-		m_pTempVertexLayout->Release();
-	
-	
+		m_pTempVertexLayout->Release();	
 }
 
+//Initialize the window 
 bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 {
-	HWND window=(HWND)pWindowHandle;
-	RECT windowRect;
-	GetClientRect(window,&windowRect);
+	HWND window=(HWND)pWindowHandle;			//Window Handle, the object referring to the current window
+	RECT windowRect;							//Window dimensions (X/Y)
+	GetClientRect(window,&windowRect);			//Relative window position for the client
 
-	UINT width=windowRect.right-windowRect.left;
+	UINT width=windowRect.right-windowRect.left;		//Window width and height
 	UINT height=windowRect.bottom-windowRect.top;
 
+	//Create and initiate functions/objects
 	if (!createDevice(window,width,height,fullScreen))
 		return false;
 	if (!createInitialRenderTarget(width,height))
 		return false;
-	//Initiate functions
+	if(!createVertexLayout())
+		return false;
 
 	return true;
 }
 
+//Create the D3D10 Device object, taking the window handle, the width and height and wether the program is fullscreen
 bool D3D10Renderer::createDevice(HWND window,int windowWidth, int windowHeight,bool fullScreen)
 {
-	UINT createDeviceFlags=0;
+	UINT createDeviceFlags=0;		//Extra options for creating the device
+
 #ifdef _DEBUG
-	createDeviceFlags|=D3D10_CREATE_DEVICE_DEBUG;
+	createDeviceFlags|=D3D10_CREATE_DEVICE_DEBUG;		//Print out extra information in debugmode
 #endif
 
-	DXGI_SWAP_CHAIN_DESC sd;
-       ZeroMemory( &sd, sizeof( sd ) );
-	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	DXGI_SWAP_CHAIN_DESC sd;							//Object with description of the swap chain
+       ZeroMemory( &sd, sizeof( sd ) );					//Clears an area of memory the size of the swap chain, filling it with 0s
+	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	//What to use the buffer/swap chain as: In this case set it to output the rendered surface
 	if (fullScreen)
-		sd.BufferCount = 2;
+		sd.BufferCount = 2;								//How many surfaces/buffers to use: Two when fullscreen, one when windowed
 	else 
 		sd.BufferCount=1;
-	sd.OutputWindow = window;
-	sd.Windowed = (BOOL)(!fullScreen);
-       sd.SampleDesc.Count = 1;
-       sd.SampleDesc.Quality = 0;
-       sd.BufferDesc.Width = windowWidth;
+	sd.OutputWindow = window;							//Set the render output to the current window
+	sd.Windowed = (BOOL)(!fullScreen);						//Check if the program's fullscreen
+       sd.SampleDesc.Count = 1;								//How many samples to take per pixel
+       sd.SampleDesc.Quality = 0;							//Quality of sampling, from 0 to ID3D10Device::CheckMultiSampleQualityLevels - 1
+       sd.BufferDesc.Width = windowWidth;					//Width and height of the window
        sd.BufferDesc.Height = windowHeight;
-       sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-       sd.BufferDesc.RefreshRate.Numerator = 60;
+       sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	//An enumerated type describing the colour depth and other rendering specifics
+       sd.BufferDesc.RefreshRate.Numerator = 60;			//Image update rate, in this case 60FPS = 16.6666... ms per frame
        sd.BufferDesc.RefreshRate.Denominator = 1;
 
-	if (FAILED(D3D10CreateDeviceAndSwapChain(NULL, 
+	if (FAILED(D3D10CreateDeviceAndSwapChain(NULL,			//Create the device and the swap chain.
 		D3D10_DRIVER_TYPE_HARDWARE,
 		NULL, 
 		createDeviceFlags,
@@ -130,54 +137,55 @@ bool D3D10Renderer::createDevice(HWND window,int windowWidth, int windowHeight,b
 	return true;
 }
 
+//Creates the initial buffer/swap chain/render surface
 bool D3D10Renderer::createInitialRenderTarget(int windowWidth, int windowHeight)
 {
-	ID3D10Texture2D *pBackBuffer;
+	ID3D10Texture2D *pBackBuffer;				//Reference to the 2D surface we're drawing everything to
 	
-	if (FAILED(m_pSwapChain->GetBuffer(0, 
+	if (FAILED(m_pSwapChain->GetBuffer(0,		
 		__uuidof(ID3D10Texture2D),
 		(void**)&pBackBuffer))) 
 		return false;
 
-	D3D10_TEXTURE2D_DESC descDepth;
-	descDepth.Width=windowWidth;
+	D3D10_TEXTURE2D_DESC descDepth;				//Object describing the 2D surface's properties
+	descDepth.Width=windowWidth;				//Width and height of the window, and of the surface
 	descDepth.Height=windowHeight;
-	descDepth.MipLevels=1;
-	descDepth.ArraySize=1;
-	descDepth.Format=DXGI_FORMAT_D32_FLOAT;
-	descDepth.SampleDesc.Count=1;
-	descDepth.SampleDesc.Quality=0;
-	descDepth.Usage=D3D10_USAGE_DEFAULT;
-	descDepth.BindFlags=D3D10_BIND_DEPTH_STENCIL;
-	descDepth.CPUAccessFlags=0;
-	descDepth.MiscFlags=0;
+	descDepth.MipLevels=1;						//Mip-mapping levels, for texture filtering purposes
+	descDepth.ArraySize=1;						//How many textures to load
+	descDepth.Format=DXGI_FORMAT_D32_FLOAT;		//What image format the texture or textures are in
+	descDepth.SampleDesc.Count=1;				//How many samples to take per pixel during the pixel shader stage
+	descDepth.SampleDesc.Quality=0;				//Quality of sampling/filtering
+	descDepth.Usage=D3D10_USAGE_DEFAULT;		//Determines read/write access for the texture
+	descDepth.BindFlags=D3D10_BIND_DEPTH_STENCIL;	//Flag or flags used to bind this buffer to pipeline stages and buffers
+	descDepth.CPUAccessFlags=0;					//Determines CPU access to the surface, if necessary. 0 means no access required.
+	descDepth.MiscFlags=0;						//Miscellaneous flags for special cases such as cubemap textures. 0 means no extra flags apply.
 
-	if (FAILED(m_pD3D10Device->CreateTexture2D(&descDepth,NULL,
+	if (FAILED(m_pD3D10Device->CreateTexture2D(&descDepth,NULL,	//Create the 2D texture for our render surface
 			&m_pDepthStencilTexture)))
 		return false;
 
-	D3D10_DEPTH_STENCIL_VIEW_DESC descDSV;
-	descDSV.Format=descDepth.Format;
-	descDSV.ViewDimension=D3D10_DSV_DIMENSION_TEXTURE2D;
-	descDSV.Texture2D.MipSlice=0;
+	D3D10_DEPTH_STENCIL_VIEW_DESC descDSV;					//Describing the properties of the depth stencil view
+	descDSV.Format=descDepth.Format;						//Match the format of the previous texture
+	descDSV.ViewDimension=D3D10_DSV_DIMENSION_TEXTURE2D;	//Determines how a depth-stencil should be accessed
+	descDSV.Texture2D.MipSlice=0;							//The first mip-map level to use
 
-	if (FAILED(m_pD3D10Device->CreateDepthStencilView(m_pDepthStencilTexture,
+	if (FAILED(m_pD3D10Device->CreateDepthStencilView(m_pDepthStencilTexture,	//Create the depth stencil resource
                    &descDSV,&m_pDepthStencelView)))
 		return false;
 
-	if (FAILED(m_pD3D10Device->CreateRenderTargetView( pBackBuffer, 
+	if (FAILED(m_pD3D10Device->CreateRenderTargetView( pBackBuffer,		//Create the render target
 		NULL, 
 		&m_pRenderTargetView ))){
              pBackBuffer->Release();
 		return  false;
 	}
-       pBackBuffer->Release();
+       pBackBuffer->Release();	//Release the buffer resource
 
-	m_pD3D10Device->OMSetRenderTargets(1, 
+	m_pD3D10Device->OMSetRenderTargets(1,	//Set the device's render target
 		&m_pRenderTargetView,		
 		m_pDepthStencelView);
 	
-	D3D10_VIEWPORT vp;
+	D3D10_VIEWPORT vp;					//Specifies a viewport with width, height, X and Y origins and depth information.
    	vp.Width = windowWidth;
     vp.Height = windowHeight;
     vp.MinDepth = 0.0f;
@@ -186,11 +194,11 @@ bool D3D10Renderer::createInitialRenderTarget(int windowWidth, int windowHeight)
     vp.TopLeftY = 0;
     
 	m_pD3D10Device->RSSetViewports( 1 
-		, &vp );
+		, &vp );	//Sets the device's viewport to our vp structure
 	return true;
 }
 
-
+//Clear the renderer
 void D3D10Renderer::clear(float r,float g,float b,float a)
 {
     // Just clear the backbuffer, colours start at 0.0 to 1.0
@@ -202,6 +210,7 @@ void D3D10Renderer::clear(float r,float g,float b,float a)
 	m_pD3D10Device->ClearDepthStencilView(m_pDepthStencelView,D3D10_CLEAR_DEPTH,1.0f,0);
 }
 
+//Present the result of a rendered frame
 void D3D10Renderer::present()
 {
 	//Swaps the buffers in the chain, the back buffer to the front(screen)
@@ -209,47 +218,49 @@ void D3D10Renderer::present()
     m_pSwapChain->Present( 0, 0 );
 }
 
+//Render a frame from the given information in the device
 void D3D10Renderer::render()
 {
 	m_pD3D10Device->IASetPrimitiveTopology(
-		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
-	m_pD3D10Device->IASetInputLayout(m_pTempVertexLayout);
+		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
+	m_pD3D10Device->IASetInputLayout(m_pTempVertexLayout);		//Passes our temporary vertex layout information into the device, binding it to the input assembler
 
 	UINT stride = sizeof( Vertex );
 	UINT offset = 0;
 
-	m_pD3D10Device->IASetVertexBuffers(
+	m_pD3D10Device->IASetVertexBuffers(						//Binds an array of vertex buffers to the input assembler
 		0,
 		1,
 		&m_pTempBuffer,
 		&stride,
 		&offset);
 
-	D3D10_TECHNIQUE_DESC techniqueDesc;
-	m_pTempTechnique->GetDesc(&techniqueDesc);
+	D3D10_TECHNIQUE_DESC techniqueDesc;						//Description of a shader 'technique'
+	m_pTempTechnique->GetDesc(&techniqueDesc);				//Sets the Temp technique description to &techniqueDesc
 
-	for(unsigned int i = 0; i < techniqueDesc.Passes;++i)
+	for(unsigned int i = 0; i < techniqueDesc.Passes;++i)			//For each pass in this technique:
 	{
-		ID3D10EffectPass *pCurrentPass = m_pTempTechnique->GetPassByIndex(i);
-		pCurrentPass->Apply(0);
-		m_pD3D10Device->Draw(3,0);
+		ID3D10EffectPass *pCurrentPass = m_pTempTechnique->GetPassByIndex(i);		//Retrieve the pass information from the technique
+		pCurrentPass->Apply(0);														//Apply it
+		m_pD3D10Device->Draw(3,0);													//And draw it to the device's surface
 	}
 }
 
+//Load a shader effect from memory
 bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
 {
-	DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
+	DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;			//Do not allow legacy/old syntax in the shader compilation
 	#if defined( DEBUG ) || defined( _DEBUG )
-		dwShaderFlags |= D3D10_SHADER_DEBUG;
+		dwShaderFlags |= D3D10_SHADER_DEBUG;					//If in debugmode, output verbose debugging information
 	#endif
 	
-		ID3D10Blob * pErrorBuffer = NULL;
-		if(FAILED(D3DX10CreateEffectFromMemory(pMem,
+		ID3D10Blob * pErrorBuffer = NULL;					//Returns errors with arbitrary size/length
+		if(FAILED(D3DX10CreateEffectFromMemory(pMem,		//Creates the effect from memory
 			strlen(pMem),
 			NULL,
 			NULL,
 			NULL,
-			"fx_4_0",
+			"fx_4_0",										//Shader level to use, in this case 4.0
 			dwShaderFlags,
 			0,
 			m_pD3D10Device,
@@ -262,29 +273,31 @@ bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
 			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
 			return false;
 		}
-		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");
+		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
 }
 
+//Create the draw buffer
 bool D3D10Renderer::createBuffer()
 {
+	//What vertices to give the renderer to draw
 	Vertex verts[] = {
 		{-1.0f,-1.0f,0.0f},
 		{0.0f,1.0f,0.0f},
-		{1.0f,-1.0f,0.0f}
+		{1.0f,-1.0f,0.0f}			//In this case a triangle
 	};
 
-	D3D10_BUFFER_DESC bd;
-	bd.Usage = D3D10_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof( Vertex ) * 3;
-	bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
-	bd.CPUAccessFlags = 0;
-	bd.MiscFlags = 0;
+	D3D10_BUFFER_DESC bd;					//Object holding information about the buffer
+	bd.Usage = D3D10_USAGE_DEFAULT;			//Access and usage permissions
+	bd.ByteWidth = sizeof( Vertex ) * 3;		//Size of the buffer, in bytes
+	bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;	//How the buffer will be bound to the pipeline, in this case to the vertex shader stage
+	bd.CPUAccessFlags = 0;					//Access permission for the CPU. 0 means no access required.
+	bd.MiscFlags = 0;						//Extra operations required
 
-	D3D10_SUBRESOURCE_DATA InitData;
-	InitData.pSysMem = &verts;
+	D3D10_SUBRESOURCE_DATA InitData;		//Initialize a subresource
+	InitData.pSysMem = &verts;				//Data to take into the resource
 
-	if(FAILED(m_pD3D10Device->CreateBuffer(
+	if(FAILED(m_pD3D10Device->CreateBuffer(			//Create the buffer on the device
 		&bd,
 		&InitData,
 		&m_pTempBuffer)))
@@ -298,13 +311,14 @@ bool D3D10Renderer::createBuffer()
 	}
 }
 
+//Creates the vertex layout
 bool D3D10Renderer::createVertexLayout()
 {
-	UINT numElements = sizeof( VertexLayout ) / sizeof(D3D10_INPUT_ELEMENT_DESC);
-	D3D10_PASS_DESC PassDesc;
-	m_pTempTechnique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
+	UINT numElements = sizeof( VertexLayout ) / sizeof(D3D10_INPUT_ELEMENT_DESC);		//How many vertices in the layout
+	D3D10_PASS_DESC PassDesc;										//Object holding info about the current render pass
+	m_pTempTechnique->GetPassByIndex( 0 )->GetDesc( &PassDesc );	//Retrieve the first pass's info
 
-	if(FAILED(m_pD3D10Device->CreateInputLayout( VertexLayout,
+	if(FAILED(m_pD3D10Device->CreateInputLayout( VertexLayout,		//Create the layout on the device
 		numElements,
 		PassDesc.pIAInputSignature,
 		PassDesc.IAInputSignatureSize,
