@@ -226,7 +226,7 @@ void D3D10Renderer::present()
 void D3D10Renderer::render()
 {
 	m_pD3D10Device->IASetPrimitiveTopology(
-		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
+		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
 	m_pD3D10Device->IASetInputLayout(m_pTempVertexLayout);		//Passes our temporary vertex layout information into the device, binding it to the input assembler
 
 	UINT stride = sizeof( Vertex );
@@ -246,7 +246,7 @@ void D3D10Renderer::render()
 	{
 		ID3D10EffectPass *pCurrentPass = m_pTempTechnique->GetPassByIndex(i);		//Retrieve the pass information from the technique
 		pCurrentPass->Apply(0);														//Apply it
-		m_pD3D10Device->Draw(3,0);													//And draw it to the device's surface
+		m_pD3D10Device->Draw(4,0);													//And draw it to the device's surface
 	}
 }
 
@@ -286,14 +286,15 @@ bool D3D10Renderer::createBuffer()
 {
 	//What vertices to give the renderer to draw
 	Vertex verts[] = {
-		{-1.0f,-1.0f,0.0f},
-		{0.0f,1.0f,0.0f},
-		{1.0f,-1.0f,0.0f}			//In this case a triangle
+		{-0.5f,-0.5f,0.0f},
+		{-0.5f,0.5f,0.0f},
+		{0.5f,-0.5f,0.0f},
+		{0.5f,0.5f,0.0f}//In this case a square
 	};
 
 	D3D10_BUFFER_DESC bd;					//Object holding information about the buffer
 	bd.Usage = D3D10_USAGE_DEFAULT;			//Access and usage permissions
-	bd.ByteWidth = sizeof( Vertex ) * 3;		//Size of the buffer, in bytes
+	bd.ByteWidth = sizeof( Vertex ) * 4;		//Size of the buffer, in bytes
 	bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;	//How the buffer will be bound to the pipeline, in this case to the vertex shader stage
 	bd.CPUAccessFlags = 0;					//Access permission for the CPU. 0 means no access required.
 	bd.MiscFlags = 0;						//Extra operations required
