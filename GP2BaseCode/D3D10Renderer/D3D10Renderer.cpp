@@ -94,7 +94,9 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createBuffer())
 		return false;
-	if (!loadEffectFromMemory(basicEffect))
+	//if (!loadEffectFromMemory(basicEffect))
+		//return false;
+	if(!loadEffectFromFile("Effects/transform.fx"))
 		return false;
 	if(!createVertexLayout())
 		return false;
@@ -277,6 +279,35 @@ bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
 			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
 			return false;
 		}
+		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
+		return true;
+}
+
+//Load a shader effect from an external file
+bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
+{	
+	DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;			//Do not allow legacy/old syntax in the shader compilation
+	#if defined( DEBUG ) || defined( _DEBUG )
+		dwShaderFlags |= D3D10_SHADER_DEBUG;					//If in debugmode, output verbose debugging information
+	#endif
+		ID3D10Blob * pErrorBuffer = NULL;					//Returns errors with arbitrary size/length
+		
+		if(FAILED(D3DX10CreateEffectFromFileA(pFilename,
+			NULL,
+			NULL,
+			"fx_4_0",
+			dwShaderFlags,
+			0,
+			m_pD3D10Device,
+			NULL,
+			NULL,
+			&m_pTempEffect,
+			&pErrorBuffer,NULL)))
+		{
+			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
+			return false;
+		}
+		
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
 }

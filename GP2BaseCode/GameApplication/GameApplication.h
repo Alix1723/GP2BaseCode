@@ -42,7 +42,6 @@ private:
 	bool initGame();
 	bool initGraphics();
 	bool initPhysics();
-
 	bool initWindow();
 private:
 	IWindow * m_pWindow;

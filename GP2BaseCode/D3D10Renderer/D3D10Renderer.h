@@ -34,6 +34,7 @@ private:
 	bool fullScreen);
 	bool createInitialRenderTarget(int windowWidth, int windowHeight);
 	bool loadEffectFromMemory(const char* pMem);
+	bool loadEffectFromFile(const char* pFilename);
 	bool createBuffer();
 	bool createVertexLayout();
 
