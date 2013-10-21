@@ -3,6 +3,11 @@
 //The header file for the renderer interface
 #include "../Renderer/Renderer.h"
 #include <Windows.h>
+#include <D3D10.h>
+#include <D3DX10.h>
+
+#define _XM_NO_INTRINSICS_
+#include <xnamath.h>
 
 //forward declarations of the D3D10 interfaces
 struct ID3D10Device;
@@ -37,6 +42,7 @@ private:
 	bool loadEffectFromFile(const char* pFilename);
 	bool createBuffer();
 	bool createVertexLayout();
+	void createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &up, float fov, float aspectRatio, float nearClip, float farClip);
 
 private:
 	//D3D10 stuff
@@ -49,4 +55,15 @@ private:
 	ID3D10EffectTechnique * m_pTempTechnique;
 	ID3D10Buffer * m_pTempBuffer;
 	ID3D10InputLayout * m_pTempVertexLayout;
+	
+	//XNA mathematics matrices
+	XMMATRIX m_View;
+	XMMATRIX m_Projection;
+	XMMATRIX m_World;
+	
+	//Matrix Variables
+	ID3D10EffectMatrixVariable * m_pViewEffectVariable;
+	ID3D10EffectMatrixVariable * m_pProjectionEffectVariable;
+	ID3D10EffectMatrixVariable * m_pWorldEffectVariable;
+
 };

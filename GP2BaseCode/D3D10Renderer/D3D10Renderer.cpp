@@ -1,7 +1,7 @@
 #include "D3D10Renderer.h"
 
-#include <D3D10.h>
-#include <D3DX10.h>
+//#include <D3D10.h>
+//#include <D3DX10.h>
 struct Vertex {
 	float x;
 	float y;
@@ -27,7 +27,7 @@ const char basicEffect[]=\
 	"}"\
 	"float4 PS( float4 pos : SV_POSITION ) : SV_Target"\
 	"{"\
-	"		return float4 ( 0.0f, 1.0f, 0.0f, 1.0f );"\
+	"		return float4 ( 1.0f, 1.0f, 1.0f, 1.0f );"\
 	"}"\
 	"technique10 Render"\
 	"{"\
@@ -53,6 +53,11 @@ D3D10Renderer::D3D10Renderer()
 	m_pTempTechnique = NULL;
 	m_pTempBuffer = NULL;
 	m_pTempVertexLayout = NULL;
+
+	//Initialize matrices
+	m_View = XMMatrixIdentity();
+	m_Projection = XMMatrixIdentity();
+	m_World = XMMatrixIdentity();
 }
 
 //Deconstructor
@@ -94,12 +99,25 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createBuffer())
 		return false;
-	//if (!loadEffectFromMemory(basicEffect))
-		//return false;
-	if(!loadEffectFromFile("Effects/transform.fx"))
+	if (!loadEffectFromMemory(basicEffect))
 		return false;
+	//if(!loadEffectFromFile("C:\Users\Alix\Documents\GitHub\GP2BaseCode\GP2BaseCode\Lab1\Debug\Effects\texture.fx"))
+		//return false;
 	if(!createVertexLayout())
 		return false;
+
+	//Creating a view camera
+	XMFLOAT3 cameraPos = XMFLOAT3(0.0f,0.0f,-10.0f);
+	XMFLOAT3 focusPos = XMFLOAT3(0.0f,0.0f,0.0f);
+	XMFLOAT3 up = XMFLOAT3(0.0f,1.0f,0.0f);
+
+	createCamera(XMLoadFloat3(&cameraPos),
+		XMLoadFloat3(&focusPos),
+		XMLoadFloat3(&up),
+		XM_PI/4,
+		(float)width/(float)height,
+		0.1f,
+		100.0f);
 
 	return true;
 }
@@ -227,6 +245,11 @@ void D3D10Renderer::present()
 //Render a frame from the given information in the device
 void D3D10Renderer::render()
 {
+	//Send matrices
+	m_pViewEffectVariable->SetMatrix((float*)&m_View);
+	m_pProjectionEffectVariable->SetMatrix((float*)&m_Projection);
+	m_pWorldEffectVariable->SetMatrix((float*)&m_World);
+
 	m_pD3D10Device->IASetPrimitiveTopology(
 		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
 	m_pD3D10Device->IASetInputLayout(m_pTempVertexLayout);		//Passes our temporary vertex layout information into the device, binding it to the input assembler
@@ -279,6 +302,11 @@ bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
 			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
 			return false;
 		}
+		//DUPLICATED FROM LOADEFFECTFROMFILE() FOR DEBUGGING
+		m_pViewEffectVariable = m_pTempEffect->GetVariableByName("matView")->AsMatrix();
+		m_pProjectionEffectVariable = m_pTempEffect->GetVariableByName("matProjection")->AsMatrix();
+		m_pWorldEffectVariable = m_pTempEffect->GetVariableByName("matWorld")->AsMatrix();
+
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
 }
@@ -308,6 +336,10 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 			return false;
 		}
 		
+		m_pViewEffectVariable = m_pTempEffect->GetVariableByName("matView")->AsMatrix();
+		m_pProjectionEffectVariable = m_pTempEffect->GetVariableByName("matProjection")->AsMatrix();
+		m_pWorldEffectVariable = m_pTempEffect->GetVariableByName("matWorld")->AsMatrix();
+
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
 }
@@ -364,4 +396,11 @@ bool D3D10Renderer::createVertexLayout()
 		return false;
 	}
 	return true;
+}
+
+//Creates a view camera
+void D3D10Renderer::createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &up, float fov, float aspectRatio, float nearClip, float farClip)
+{
+	m_View = XMMatrixLookAtLH(position,focus,up);
+	m_Projection = XMMatrixPerspectiveFovLH(fov,aspectRatio,nearClip,farClip);
 }
