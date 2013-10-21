@@ -43,6 +43,7 @@ private:
 	bool createBuffer();
 	bool createVertexLayout();
 	void createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &up, float fov, float aspectRatio, float nearClip, float farClip);
+	void positionObject(float x, float y, float z);
 
 private:
 	//D3D10 stuff

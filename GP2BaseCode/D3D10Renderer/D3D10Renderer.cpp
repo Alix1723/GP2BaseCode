@@ -119,6 +119,9 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		0.1f,
 		100.0f);
 
+	//Moving the object
+	positionObject(0.0f,0.0f,0.0f);
+	//????????????????????
 	return true;
 }
 
@@ -332,7 +335,7 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 			&m_pTempEffect,
 			&pErrorBuffer,NULL)))
 		{
-			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
+			//OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
 			return false;
 		}
 		
@@ -349,10 +352,10 @@ bool D3D10Renderer::createBuffer()
 {
 	//What vertices to give the renderer to draw
 	Vertex verts[] = {
-		{-0.5f,-0.5f,0.0f},
-		{-0.5f,0.5f,0.0f},
-		{0.5f,-0.5f,0.0f},
-		{0.5f,0.5f,0.0f}//In this case a square
+		{-1.0f,-1.0f,0.0f},
+		{-1.0f,1.0f,0.0f},
+		{1.0f,-1.0f,0.0f},
+		{1.0f,1.0f,0.0f}//In this case a square
 	};
 
 	D3D10_BUFFER_DESC bd;					//Object holding information about the buffer
@@ -403,4 +406,10 @@ void D3D10Renderer::createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &
 {
 	m_View = XMMatrixLookAtLH(position,focus,up);
 	m_Projection = XMMatrixPerspectiveFovLH(fov,aspectRatio,nearClip,farClip);
+}
+
+//Repositions the current object
+void D3D10Renderer::positionObject(float x, float y, float z)
+{
+	m_World = XMMatrixTranslation(x,y,z);
 }
