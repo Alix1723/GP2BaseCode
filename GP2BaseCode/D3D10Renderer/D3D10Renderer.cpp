@@ -92,17 +92,18 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 	UINT width=windowRect.right-windowRect.left;		//Window width and height
 	UINT height=windowRect.bottom-windowRect.top;
 
-	//Create and initiate functions/objects
+		//Create and initiate functions/objects
 	if (!createDevice(window,width,height,fullScreen))
 		return false;
 	if (!createInitialRenderTarget(width,height))
 		return false;
 	if (!createBuffer())
 		return false;
-	if (!loadEffectFromMemory(basicEffect))
+	//if (!loadEffectFromMemory(basicEffect))
+		//return false;  
+	//"C:\Users\Alix\Documents\GitHub\GP2BaseCode\GP2BaseCode\Lab1\Debug\Effects\transform.fx"
+	if(!loadEffectFromFile("Effects/transform.fx"))
 		return false;
-	//if(!loadEffectFromFile("C:\Users\Alix\Documents\GitHub\GP2BaseCode\GP2BaseCode\Lab1\Debug\Effects\texture.fx"))
-		//return false;
 	if(!createVertexLayout())
 		return false;
 
@@ -120,8 +121,7 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		100.0f);
 
 	//Moving the object
-	positionObject(0.0f,0.0f,0.0f);
-	//????????????????????
+	positionObject(0.0f,1.0f,0.0f);
 	return true;
 }
 
@@ -335,7 +335,7 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 			&m_pTempEffect,
 			&pErrorBuffer,NULL)))
 		{
-			//OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
+			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
 			return false;
 		}
 		
