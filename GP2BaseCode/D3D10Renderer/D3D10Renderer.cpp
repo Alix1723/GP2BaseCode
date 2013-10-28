@@ -9,8 +9,8 @@ struct Vertex {
 	float z;
 
 	//Texture co-ordinates
-	float u;
-	float v;
+	float tu;
+	float tv;
 };
 
 const D3D10_INPUT_ELEMENT_DESC VertexLayout[] = 
@@ -21,7 +21,15 @@ const D3D10_INPUT_ELEMENT_DESC VertexLayout[] =
 	0,
 	0,
 	D3D10_INPUT_PER_VERTEX_DATA,
-	0 },
+	0},
+	
+	{"TEXCOORD",
+	0,
+	DXGI_FORMAT_R32G32B32_FLOAT,
+	0,
+	12,	//Important!
+	D3D10_INPUT_PER_VERTEX_DATA,
+	0}
 };
 
 //A simple default Effect
@@ -81,10 +89,12 @@ D3D10Renderer::~D3D10Renderer()
 		m_pSwapChain->Release();
 	if (m_pD3D10Device)
 		m_pD3D10Device->Release();
-	if(m_pTempEffect)
+	if (m_pTempEffect)
 		m_pTempEffect->Release();
-	if(m_pTempVertexLayout)
+	if (m_pTempVertexLayout)
 		m_pTempVertexLayout->Release();	
+	if (m_pBaseTextureMap)
+		m_pBaseTextureMap->Release();
 }
 
 //Initialize the window 
@@ -104,12 +114,11 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createBuffer())
 		return false;
-	//if (!loadEffectFromMemory(basicEffect))
-		//return false;  
-	//"C:\Users\Alix\Documents\GitHub\GP2BaseCode\GP2BaseCode\Lab1\Debug\Effects\transform.fx"
-	if(!loadEffectFromFile("Effects/transform.fx"))
+	if(!loadEffectFromFile("Effects/texture.fx"))
 		return false;
 	if(!createVertexLayout())
+		return false;
+	if(!loadBaseTexture("Textures/face.png"))
 		return false;
 
 	//Creating a view camera
@@ -257,6 +266,8 @@ void D3D10Renderer::render()
 	m_pViewEffectVariable->SetMatrix((float*)&m_View);
 	m_pProjectionEffectVariable->SetMatrix((float*)&m_Projection);
 	m_pWorldEffectVariable->SetMatrix((float*)&m_World);
+	//Send texture
+	m_pBaseTextureEffectVariable->SetResource(m_pBaseTextureMap);
 
 	m_pD3D10Device->IASetPrimitiveTopology(
 		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
@@ -343,11 +354,13 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
 			return false;
 		}
-		
+		//Matrices
 		m_pViewEffectVariable = m_pTempEffect->GetVariableByName("matView")->AsMatrix();
 		m_pProjectionEffectVariable = m_pTempEffect->GetVariableByName("matProjection")->AsMatrix();
 		m_pWorldEffectVariable = m_pTempEffect->GetVariableByName("matWorld")->AsMatrix();
-
+		//Texture
+		m_pBaseTextureEffectVariable = m_pTempEffect->GetVariableByName("face.png")->AsShaderResource();
+		//Technique
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
 }
@@ -417,4 +430,20 @@ void D3D10Renderer::createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &
 void D3D10Renderer::positionObject(float x, float y, float z)
 {
 	m_World = XMMatrixTranslation(x,y,z);
+}
+
+//Loads a texture (view) from a file
+bool D3D10Renderer::loadBaseTexture(char * pFilename)
+{
+	if(FAILED(D3DX10CreateShaderResourceViewFromFileA(
+		m_pD3D10Device,
+		pFilename,
+		NULL,
+		NULL,
+		&m_pBaseTextureMap,
+		NULL)))
+		{
+			return false;
+		}
+	return true;
 }
