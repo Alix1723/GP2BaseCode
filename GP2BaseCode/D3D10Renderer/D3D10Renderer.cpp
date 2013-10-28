@@ -25,11 +25,11 @@ const D3D10_INPUT_ELEMENT_DESC VertexLayout[] =
 	
 	{"TEXCOORD",
 	0,
-	DXGI_FORMAT_R32G32B32_FLOAT,
+	DXGI_FORMAT_R32G32_FLOAT, //Important!
 	0,
-	12,	//Important!
+	12,	//Also important!
 	D3D10_INPUT_PER_VERTEX_DATA,
-	0}
+	0},
 };
 
 //A simple default Effect
