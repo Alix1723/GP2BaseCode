@@ -3,9 +3,14 @@
 //#include <D3D10.h>
 //#include <D3DX10.h>
 struct Vertex {
+	//Position co-ordinates
 	float x;
 	float y;
 	float z;
+
+	//Texture co-ordinates
+	float u;
+	float v;
 };
 
 const D3D10_INPUT_ELEMENT_DESC VertexLayout[] = 
@@ -352,10 +357,10 @@ bool D3D10Renderer::createBuffer()
 {
 	//What vertices to give the renderer to draw
 	Vertex verts[] = {
-		{-1.0f,-1.0f,0.0f},
-		{-1.0f,1.0f,0.0f},
-		{1.0f,-1.0f,0.0f},
-		{1.0f,1.0f,0.0f}//In this case a square
+		{-1.0f,-1.0f,0.0f, 0.0f,1.0f}, //Bottom Left
+		{-1.0f,1.0f,0.0f, 0.0f,0.0f}, //Top left
+		{1.0f,-1.0f,0.0f, 1.0f,1.0f}, //Bottom Right
+		{1.0f,1.0f,0.0f, 1.0f,0.0f} //Top Right
 	};
 
 	D3D10_BUFFER_DESC bd;					//Object holding information about the buffer

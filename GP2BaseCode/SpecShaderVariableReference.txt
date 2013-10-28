@@ -1,0 +1,18 @@
+
+Specular Effect variables
+
+	float4 ambientMaterial
+	float4 ambientLightColour
+	
+	float4 diffuseMaterial
+	float4 diffuseLightColour
+	
+	float3 lightDirection
+	
+	float4 specMaterial
+	float4 specLightColour
+	
+	float4 cameraPosition
+	
+	float specPower
+	
