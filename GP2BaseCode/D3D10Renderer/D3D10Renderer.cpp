@@ -93,8 +93,10 @@ D3D10Renderer::~D3D10Renderer()
 		m_pTempEffect->Release();
 	if (m_pTempVertexLayout)
 		m_pTempVertexLayout->Release();	
-	if (m_pBaseTextureMap)
-		m_pBaseTextureMap->Release();
+	//if (m_pBaseTextureMap)
+		//m_pBaseTextureMap->Release();
+	if(m_pTempIndexBuffer)
+		m_pTempIndexBuffer->Release();
 }
 
 //Initialize the window 
@@ -118,8 +120,8 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if(!createVertexLayout())
 		return false;
-	if(!loadBaseTexture("Textures/face.png"))
-		return false;
+	//if(!loadBaseTexture("Textures/face.png"))
+	//	return false;
 
 	//Creating a view camera
 	XMFLOAT3 cameraPos = XMFLOAT3(0.0f,0.0f,-10.0f);
@@ -283,6 +285,11 @@ void D3D10Renderer::render()
 		&stride,
 		&offset);
 
+	m_pD3D10Device->IASetIndexBuffer(						//Binds an array of indices
+		m_pTempIndexBuffer,
+		DXGI_FORMAT_R32_UINT,
+		0);
+
 	D3D10_TECHNIQUE_DESC techniqueDesc;						//Description of a shader 'technique'
 	m_pTempTechnique->GetDesc(&techniqueDesc);				//Sets the Temp technique description to &techniqueDesc
 
@@ -290,7 +297,7 @@ void D3D10Renderer::render()
 	{
 		ID3D10EffectPass *pCurrentPass = m_pTempTechnique->GetPassByIndex(i);		//Retrieve the pass information from the technique
 		pCurrentPass->Apply(0);														//Apply it
-		m_pD3D10Device->Draw(4,0);													//And draw it to the device's surface
+		m_pD3D10Device->DrawIndexed(6,0,0);													//And draw it to the device's surface
 	}
 }
 
@@ -370,34 +377,80 @@ bool D3D10Renderer::createBuffer()
 {
 	//What vertices to give the renderer to draw
 	Vertex verts[] = {
-		{-1.0f,-1.0f,0.0f, 0.0f,1.0f}, //Bottom Left
-		{-1.0f,1.0f,0.0f, 0.0f,0.0f}, //Top left
-		{1.0f,-1.0f,0.0f, 1.0f,1.0f}, //Bottom Right
-		{1.0f,1.0f,0.0f, 1.0f,0.0f} //Top Right
+		//Front
+		{-1.0f,-1.0f,1.0f, 0.0f,1.0f}, //Bottom Left
+		{-1.0f,1.0f,1.0f, 0.0f,0.0f}, //Top left
+		{1.0f,-1.0f,1.0f, 1.0f,1.0f}, //Bottom Right
+		{1.0f,1.0f,1.0f, 1.0f,0.0f}, //Top Right
+		//Back
+		{-1.0f,-1.0f,-1.0f, 0.0f,1.0f}, //Bottom Left
+		{-1.0f,1.0f,-1.0f, 0.0f,0.0f}, //Top left
+		{1.0f,-1.0f,-1.0f, 1.0f,1.0f}, //Bottom Right
+		{1.0f,1.0f,-1.0f, 1.0f,0.0f} //Top Right
 	};
 
+	//Vertex buffer
 	D3D10_BUFFER_DESC bd;					//Object holding information about the buffer
 	bd.Usage = D3D10_USAGE_DEFAULT;			//Access and usage permissions
-	bd.ByteWidth = sizeof( Vertex ) * 4;		//Size of the buffer, in bytes
+	bd.ByteWidth = sizeof( Vertex ) * 8;		//Size of the buffer, in bytes
 	bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;	//How the buffer will be bound to the pipeline, in this case to the vertex shader stage
 	bd.CPUAccessFlags = 0;					//Access permission for the CPU. 0 means no access required.
 	bd.MiscFlags = 0;						//Extra operations required
 
-	D3D10_SUBRESOURCE_DATA InitData;		//Initialize a subresource
-	InitData.pSysMem = &verts;				//Data to take into the resource
+	D3D10_SUBRESOURCE_DATA InitVxData;		//Initialize a subresource
+	InitVxData.pSysMem = &verts;				//Data to take into the resource
 
 	if(FAILED(m_pD3D10Device->CreateBuffer(			//Create the buffer on the device
 		&bd,
-		&InitData,
+		&InitVxData,
 		&m_pTempBuffer)))
 	{
-		OutputDebugStringA("Can't create buffer!");
+		OutputDebugStringA("Can't create Vertex buffer!");
 		return false;
 	}
-	else
+	
+	//Index buffer
+	int indices[36] = {
+		//Front face
+		0,1,2,
+		1,3,2,
+		//Right face
+		2,3,4,
+		3,4,5,
+		//Back face
+		4,5,6,
+		5,6,7,
+		//Left face
+		6,7,0,
+		7,0,1,
+		//Top face
+		1,7,3,
+		7,5,3,
+		//Bottom face
+		0,2,4,
+		0,4,6
+	};
+
+	D3D10_BUFFER_DESC indexBD;
+	indexBD.Usage = D3D10_USAGE_DEFAULT;
+	indexBD.ByteWidth = sizeof(int)*36;
+	indexBD.BindFlags = D3D10_BIND_INDEX_BUFFER;
+	indexBD.CPUAccessFlags = 0;
+	indexBD.MiscFlags = 0;
+
+	D3D10_SUBRESOURCE_DATA InitIBData;
+	InitIBData.pSysMem = &indices;
+
+	if(FAILED(m_pD3D10Device->CreateBuffer(			//Create the buffer on the device
+		&indexBD,
+		&InitIBData,
+		&m_pTempIndexBuffer)))
 	{
-		return true;
-	}
+		OutputDebugStringA("Can't create Index buffer!");
+		return false;}
+
+	return true;
+	
 }
 
 //Creates the vertex layout
