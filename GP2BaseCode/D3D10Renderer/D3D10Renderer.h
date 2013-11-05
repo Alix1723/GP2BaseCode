@@ -44,6 +44,7 @@ private:
 	bool createVertexLayout();
 	void createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &up, float fov, float aspectRatio, float nearClip, float farClip);
 	void positionObject(float x, float y, float z);
+	void rotateObject(float p, float y, float r);
 	bool loadBaseTexture(char * pFilename);
 
 private:

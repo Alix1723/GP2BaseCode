@@ -142,7 +142,8 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 	m_AmbientLightColour = XMFLOAT4(0.0f,0.0f,1.0f,1.0f);
 
 	//Moving the object
-	positionObject(5.0f,-4.0f,5.0f);
+	positionObject(0.0f,0.0f,0.0f);
+	rotateObject(20.0f,30.0f,0.0f);
 	return true;
 }
 
@@ -490,10 +491,16 @@ void D3D10Renderer::createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &
 	m_Projection = XMMatrixPerspectiveFovLH(fov,aspectRatio,nearClip,farClip);
 }
 
-//Repositi/ons the current object
+//Repositions the current object
 void D3D10Renderer::positionObject(float x, float y, float z)
 {
 	m_World = XMMatrixTranslation(x,y,z);
+}
+
+//Rotates the current object
+void D3D10Renderer::rotateObject(float p, float y, float r)
+{
+	m_World = XMMatrixRotationRollPitchYaw(p,y,r);
 }
 
 //Loads a texture (view) from a file
