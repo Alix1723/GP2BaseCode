@@ -65,10 +65,17 @@ private:
 	XMMATRIX m_View;
 	XMMATRIX m_Projection;
 	XMMATRIX m_World;
-	
+
 	//Matrix Variables
 	ID3D10EffectMatrixVariable * m_pViewEffectVariable;
 	ID3D10EffectMatrixVariable * m_pProjectionEffectVariable;
 	ID3D10EffectMatrixVariable * m_pWorldEffectVariable;
 
+	//Colours
+	XMFLOAT4 m_AmbientMatColour;
+	XMFLOAT4 m_AmbientLightColour;
+
+	//Colour variables
+	ID3D10EffectVectorVariable * m_pAmbientMatColourVariable;
+	ID3D10EffectVectorVariable * m_pAmbientLightColourVariable;
 };

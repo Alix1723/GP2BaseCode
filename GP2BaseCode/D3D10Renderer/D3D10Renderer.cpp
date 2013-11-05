@@ -9,8 +9,9 @@ struct Vertex {
 	float z;
 
 	//Texture co-ordinates
-	float tu;
-	float tv;
+	float nu;
+	float nv;
+	float nw;
 };
 
 const D3D10_INPUT_ELEMENT_DESC VertexLayout[] = 
@@ -23,13 +24,13 @@ const D3D10_INPUT_ELEMENT_DESC VertexLayout[] =
 	D3D10_INPUT_PER_VERTEX_DATA,
 	0},
 	
-	{"TEXCOORD",
+	{"NORMALS",
 	0,
-	DXGI_FORMAT_R32G32_FLOAT, //Important!
+	DXGI_FORMAT_R32G32B32_FLOAT, //Important!
 	0,
 	12,	//Also important!
 	D3D10_INPUT_PER_VERTEX_DATA,
-	0},
+	0}
 };
 
 //A simple default Effect
@@ -116,7 +117,7 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createBuffer())
 		return false;
-	if(!loadEffectFromFile("Effects/texture.fx"))
+	if(!loadEffectFromFile("Effects/Ambient_Effect.fx"))
 		return false;
 	if(!createVertexLayout())
 		return false;
@@ -136,8 +137,12 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		0.1f,
 		100.0f);
 
+	//Setting colours
+	m_AmbientMatColour = XMFLOAT4(0.5f,0.5f,0.5f,0.1f);
+	m_AmbientLightColour = XMFLOAT4(0.0f,0.0f,1.0f,1.0f);
+
 	//Moving the object
-	positionObject(0.0f,1.0f,0.0f);
+	positionObject(5.0f,-4.0f,5.0f);
 	return true;
 }
 
@@ -269,7 +274,10 @@ void D3D10Renderer::render()
 	m_pProjectionEffectVariable->SetMatrix((float*)&m_Projection);
 	m_pWorldEffectVariable->SetMatrix((float*)&m_World);
 	//Send texture
-	m_pBaseTextureEffectVariable->SetResource(m_pBaseTextureMap);
+	//m_pBaseTextureEffectVariable->SetResource(m_pBaseTextureMap);
+	//Colours
+	m_pAmbientMatColourVariable->SetFloatVector((float*)&m_AmbientMatColour);
+	m_pAmbientLightColourVariable->SetFloatVector((float*)&m_AmbientLightColour);
 
 	m_pD3D10Device->IASetPrimitiveTopology(
 		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
@@ -297,7 +305,7 @@ void D3D10Renderer::render()
 	{
 		ID3D10EffectPass *pCurrentPass = m_pTempTechnique->GetPassByIndex(i);		//Retrieve the pass information from the technique
 		pCurrentPass->Apply(0);														//Apply it
-		m_pD3D10Device->DrawIndexed(6,0,0);													//And draw it to the device's surface
+		m_pD3D10Device->DrawIndexed(36,0,0);													//And draw it to the device's surface
 	}
 }
 
@@ -366,8 +374,11 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 		m_pProjectionEffectVariable = m_pTempEffect->GetVariableByName("matProjection")->AsMatrix();
 		m_pWorldEffectVariable = m_pTempEffect->GetVariableByName("matWorld")->AsMatrix();
 		//Texture
-		m_pBaseTextureEffectVariable = m_pTempEffect->GetVariableByName("face.png")->AsShaderResource();
+		//m_pBaseTextureEffectVariable = m_pTempEffect->GetVariableByName("face.png")->AsShaderResource();
 		//Technique
+		m_pAmbientMatColourVariable = m_pTempEffect->GetVariableByName("ambientMaterial")->AsVector();
+		m_pAmbientLightColourVariable = m_pTempEffect->GetVariableByName("ambientLightColour")->AsVector();
+
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
 }
@@ -378,15 +389,15 @@ bool D3D10Renderer::createBuffer()
 	//What vertices to give the renderer to draw
 	Vertex verts[] = {
 		//Front
-		{-1.0f,-1.0f,1.0f, 0.0f,1.0f}, //Bottom Left
-		{-1.0f,1.0f,1.0f, 0.0f,0.0f}, //Top left
-		{1.0f,-1.0f,1.0f, 1.0f,1.0f}, //Bottom Right
-		{1.0f,1.0f,1.0f, 1.0f,0.0f}, //Top Right
+		{-1.0f,-1.0f,1.0f,	0.0f,0.5f,0.5f}, 
+		{-1.0f,1.0f,1.0f,	0.0f,0.5f,0.5f}, 
+		{1.0f,-1.0f,1.0f,	0.0f,-0.5f,0.5f}, 
+		{1.0f,1.0f,1.0f,	0.0f,-0.5f,0.5f}, 
 		//Back
-		{-1.0f,-1.0f,-1.0f, 0.0f,1.0f}, //Bottom Left
-		{-1.0f,1.0f,-1.0f, 0.0f,0.0f}, //Top left
-		{1.0f,-1.0f,-1.0f, 1.0f,1.0f}, //Bottom Right
-		{1.0f,1.0f,-1.0f, 1.0f,0.0f} //Top Right
+		{-1.0f,-1.0f,-1.0f,	0.0f,0.5f,-0.5f}, 
+		{-1.0f,1.0f,-1.0f,	0.0f,0.5f,-0.5f}, 
+		{1.0f,-1.0f,-1.0f,	0.0f,-0.5f,-0.5f}, 
+		{1.0f,1.0f,-1.0f,	0.0f,-0.5f,-0.5f} 
 	};
 
 	//Vertex buffer
@@ -479,7 +490,7 @@ void D3D10Renderer::createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &
 	m_Projection = XMMatrixPerspectiveFovLH(fov,aspectRatio,nearClip,farClip);
 }
 
-//Repositions the current object
+//Repositi/ons the current object
 void D3D10Renderer::positionObject(float x, float y, float z)
 {
 	m_World = XMMatrixTranslation(x,y,z);

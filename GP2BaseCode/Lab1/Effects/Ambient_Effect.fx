@@ -8,7 +8,7 @@ float4 ambientMaterial
 <
 	string UIName="Ambient Material";
 	string UIWidget="Color";
->;
+> = {1,1,1,1};
 
 float4 ambientLightColour
 <
