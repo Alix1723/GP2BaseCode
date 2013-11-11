@@ -24,9 +24,9 @@ const D3D10_INPUT_ELEMENT_DESC VertexLayout[] =
 	D3D10_INPUT_PER_VERTEX_DATA,
 	0},
 	
-	{"NORMALS",
+	{"NORMAL",
 	0,
-	DXGI_FORMAT_R32G32B32_FLOAT, //Important!
+	DXGI_FORMAT_R32G32B32_FLOAT, //Important!0
 	0,
 	12,	//Also important!
 	D3D10_INPUT_PER_VERTEX_DATA,
@@ -117,7 +117,7 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createBuffer())
 		return false;
-	if(!loadEffectFromFile("Effects/Ambient_Effect.fx"))
+	if(!loadEffectFromFile("Effects/Diffuse_Effect.fx"))
 		return false;
 	if(!createVertexLayout())
 		return false;
@@ -138,12 +138,17 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		100.0f);
 
 	//Setting colours
-	m_AmbientMatColour = XMFLOAT4(0.5f,0.5f,0.5f,0.1f);
-	m_AmbientLightColour = XMFLOAT4(0.0f,0.0f,1.0f,1.0f);
+	m_AmbientMatColour = XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
+	m_AmbientLightColour = XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
+
+	m_DiffuseMatColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
+	m_DiffuseLightColour = XMFLOAT4(0.0f,1.0f,0.0f,1.0f);
+
+	m_DiffuseLightDirection = XMFLOAT3(1.0f,0.0f,0.0f);
 
 	//Moving the object
 	positionObject(0.0f,0.0f,0.0f);
-	rotateObject(20.0f,30.0f,0.0f);
+	rotateObject(30.0f,40.0f,0.0f);
 	return true;
 }
 
@@ -280,6 +285,11 @@ void D3D10Renderer::render()
 	m_pAmbientMatColourVariable->SetFloatVector((float*)&m_AmbientMatColour);
 	m_pAmbientLightColourVariable->SetFloatVector((float*)&m_AmbientLightColour);
 
+	m_pDiffuseMatColourVariable->SetFloatVector((float*)&m_DiffuseMatColour);
+	m_pDiffuseLightColourVariable->SetFloatVector((float*)&m_DiffuseLightColour);
+
+	m_pDiffuseLightDirectionVariable->SetFloatVector((float*)&m_DiffuseLightDirection);
+	
 	m_pD3D10Device->IASetPrimitiveTopology(
 		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
 	m_pD3D10Device->IASetInputLayout(m_pTempVertexLayout);		//Passes our temporary vertex layout information into the device, binding it to the input assembler
@@ -377,8 +387,13 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 		//Texture
 		//m_pBaseTextureEffectVariable = m_pTempEffect->GetVariableByName("face.png")->AsShaderResource();
 		//Technique
+		//Amb. colours
 		m_pAmbientMatColourVariable = m_pTempEffect->GetVariableByName("ambientMaterial")->AsVector();
 		m_pAmbientLightColourVariable = m_pTempEffect->GetVariableByName("ambientLightColour")->AsVector();
+		//Diff. colours and direction
+		m_pDiffuseMatColourVariable = m_pTempEffect->GetVariableByName("diffuseMaterial")->AsVector();
+		m_pDiffuseLightColourVariable = m_pTempEffect->GetVariableByName("diffuseLightColour")->AsVector();
+		m_pDiffuseLightDirectionVariable = m_pTempEffect->GetVariableByName("lightDirection")->AsVector();
 
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
@@ -439,8 +454,8 @@ bool D3D10Renderer::createBuffer()
 		1,7,3,
 		7,5,3,
 		//Bottom face
-		0,2,4,
-		0,4,6
+		0,4,6,
+		0,2,4
 	};
 
 	D3D10_BUFFER_DESC indexBD;

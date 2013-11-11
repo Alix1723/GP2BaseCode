@@ -76,7 +76,16 @@ private:
 	XMFLOAT4 m_AmbientMatColour;
 	XMFLOAT4 m_AmbientLightColour;
 
+	XMFLOAT4 m_DiffuseMatColour;
+	XMFLOAT4 m_DiffuseLightColour;
+	XMFLOAT3 m_DiffuseLightDirection;
+
 	//Colour variables
 	ID3D10EffectVectorVariable * m_pAmbientMatColourVariable;
 	ID3D10EffectVectorVariable * m_pAmbientLightColourVariable;
+
+	ID3D10EffectVectorVariable * m_pDiffuseMatColourVariable;
+	ID3D10EffectVectorVariable * m_pDiffuseLightColourVariable;
+	ID3D10EffectVectorVariable * m_pDiffuseLightDirectionVariable;
+
 };

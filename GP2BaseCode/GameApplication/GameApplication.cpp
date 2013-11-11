@@ -20,8 +20,8 @@ CGameApplication::CGameApplication(void)
 	//Set the Window name to GP2
 	m_GameOptionDesc.gameName=TEXT("GP2");
 	//Window Height and Width
-	m_GameOptionDesc.width=640;
-	m_GameOptionDesc.height=480;
+	m_GameOptionDesc.width=1280;
+	m_GameOptionDesc.height=720;
 	//Full screen
 	m_GameOptionDesc.fullscreen=false;
 	//Config options
