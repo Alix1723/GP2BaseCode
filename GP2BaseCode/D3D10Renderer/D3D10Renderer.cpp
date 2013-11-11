@@ -117,7 +117,7 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createBuffer())
 		return false;
-	if(!loadEffectFromFile("Effects/Diffuse_Effect.fx"))
+	if(!loadEffectFromFile("Effects/Specular_Effect.fx"))
 		return false;
 	if(!createVertexLayout())
 		return false;
@@ -142,9 +142,15 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 	m_AmbientLightColour = XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
 
 	m_DiffuseMatColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
-	m_DiffuseLightColour = XMFLOAT4(0.0f,1.0f,0.0f,1.0f);
+	m_DiffuseLightColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
 
-	m_DiffuseLightDirection = XMFLOAT3(1.0f,0.0f,0.0f);
+	m_DiffuseLightDirection = XMFLOAT3(1.0f,-1.0f,-1.0f);
+
+	m_SpecularMatColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
+	m_SpecularLightColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
+	
+	m_SpecularCameraPosition = cameraPos;
+	m_SpecularPower = 15;
 
 	//Moving the object
 	positionObject(0.0f,10.0f,0.0f);
@@ -282,14 +288,19 @@ void D3D10Renderer::render()
 	//Send texture
 	//m_pBaseTextureEffectVariable->SetResource(m_pBaseTextureMap);
 	//Colours
+	//AMBIENT
 	m_pAmbientMatColourVariable->SetFloatVector((float*)&m_AmbientMatColour);
 	m_pAmbientLightColourVariable->SetFloatVector((float*)&m_AmbientLightColour);
-
+	//DIFFUSE
 	m_pDiffuseMatColourVariable->SetFloatVector((float*)&m_DiffuseMatColour);
 	m_pDiffuseLightColourVariable->SetFloatVector((float*)&m_DiffuseLightColour);
-
 	m_pDiffuseLightDirectionVariable->SetFloatVector((float*)&m_DiffuseLightDirection);
-	
+	//SPECULAR
+	m_pSpecularMatColourVariable->SetFloatVector((float*)&m_SpecularMatColour);
+	m_pSpecularLightColourVariable->SetFloatVector((float*)&m_SpecularLightColour);
+	m_pSpecularCameraPositionVariable->SetFloatVector((float*)&m_SpecularCameraPosition);
+	m_pSpecularPowerVariable->SetFloat(m_SpecularPower);
+
 	m_pD3D10Device->IASetPrimitiveTopology(
 		D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP );				//What kind of information we're giving the renderer, E.G. LINELIST, TRIANGLELIST, POINTLIST
 	m_pD3D10Device->IASetInputLayout(m_pTempVertexLayout);		//Passes our temporary vertex layout information into the device, binding it to the input assembler
@@ -321,7 +332,7 @@ void D3D10Renderer::render()
 }
 
 //Load a shader effect from memory
-bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
+/*bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
 {
 	DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;			//Do not allow legacy/old syntax in the shader compilation
 	#if defined( DEBUG ) || defined( _DEBUG )
@@ -354,7 +365,7 @@ bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
 
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
-}
+}*/
 
 //Load a shader effect from an external file
 bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
@@ -394,6 +405,11 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 		m_pDiffuseMatColourVariable = m_pTempEffect->GetVariableByName("diffuseMaterial")->AsVector();
 		m_pDiffuseLightColourVariable = m_pTempEffect->GetVariableByName("diffuseLightColour")->AsVector();
 		m_pDiffuseLightDirectionVariable = m_pTempEffect->GetVariableByName("lightDirection")->AsVector();
+
+		m_pSpecularMatColourVariable = m_pTempEffect->GetVariableByName("specMaterial")->AsVector();
+		m_pSpecularLightColourVariable = m_pTempEffect->GetVariableByName("specLightColour")->AsVector();
+		m_pSpecularCameraPositionVariable = m_pTempEffect->GetVariableByName("cameraPosition")->AsVector();
+		m_pSpecularPowerVariable = m_pTempEffect->GetVariableByName("specPower")->AsScalar();
 
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;

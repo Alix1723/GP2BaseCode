@@ -73,12 +73,18 @@ private:
 	ID3D10EffectMatrixVariable * m_pWorldEffectVariable;
 
 	//Colours
+	//AMBIENT
 	XMFLOAT4 m_AmbientMatColour;
 	XMFLOAT4 m_AmbientLightColour;
-
+	//DIFFUSE
 	XMFLOAT4 m_DiffuseMatColour;
 	XMFLOAT4 m_DiffuseLightColour;
 	XMFLOAT3 m_DiffuseLightDirection;
+	//SPECULAR
+	XMFLOAT4 m_SpecularMatColour;
+	XMFLOAT4 m_SpecularLightColour;
+	XMFLOAT3 m_SpecularCameraPosition;
+	float m_SpecularPower;
 
 	//Colour variables
 	ID3D10EffectVectorVariable * m_pAmbientMatColourVariable;
@@ -87,5 +93,9 @@ private:
 	ID3D10EffectVectorVariable * m_pDiffuseMatColourVariable;
 	ID3D10EffectVectorVariable * m_pDiffuseLightColourVariable;
 	ID3D10EffectVectorVariable * m_pDiffuseLightDirectionVariable;
-	
+
+	ID3D10EffectVectorVariable * m_pSpecularMatColourVariable;
+	ID3D10EffectVectorVariable * m_pSpecularLightColourVariable;
+	ID3D10EffectVectorVariable * m_pSpecularCameraPositionVariable;
+	ID3D10EffectScalarVariable * m_pSpecularPowerVariable;
 };
