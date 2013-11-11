@@ -147,8 +147,8 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 	m_DiffuseLightDirection = XMFLOAT3(1.0f,0.0f,0.0f);
 
 	//Moving the object
-	positionObject(0.0f,0.0f,0.0f);
-	rotateObject(30.0f,40.0f,0.0f);
+	positionObject(0.0f,10.0f,0.0f);
+	rotateObject(70.0f,40.0f,0.0f);
 	return true;
 }
 
@@ -261,7 +261,7 @@ void D3D10Renderer::clear(float r,float g,float b,float a)
 	//Clear the Render Target
 	//http://msdn.microsoft.com/en-us/library/bb173539%28v=vs.85%29.aspx - BMD
     m_pD3D10Device->ClearRenderTargetView( m_pRenderTargetView, ClearColor );
-	m_pD3D10Device->ClearDepthStencilView(m_pDepthStencelView,D3D10_CLEAR_DEPTH,1.0f,0);
+	m_pD3D10Device->ClearDepthStencilView(m_pDepthStencelView,D3D10_CLEAR_DEPTH,1.0f,0);	
 }
 
 //Present the result of a rendered frame
@@ -412,7 +412,8 @@ bool D3D10Renderer::createBuffer()
 		//Back
 		{-1.0f,-1.0f,-1.0f,	0.0f,0.5f,-0.5f}, 
 		{-1.0f,1.0f,-1.0f,	0.0f,0.5f,-0.5f}, 
-		{1.0f,-1.0f,-1.0f,	0.0f,-0.5f,-0.5f}, 
+		{1.0f
+		,-1.0f,-1.0f,	0.0f,-0.5f,-0.5f}, 
 		{1.0f,1.0f,-1.0f,	0.0f,-0.5f,-0.5f} 
 	};
 
@@ -442,20 +443,20 @@ bool D3D10Renderer::createBuffer()
 		0,1,2,
 		1,3,2,
 		//Right face
-		2,3,4,
-		3,4,5,
+		2,3,6,
+		3,7,6,
 		//Back face
-		4,5,6,
-		5,6,7,
+		6,7,5,
+		5,4,6,
 		//Left face
-		6,7,0,
-		7,0,1,
+		4,5,1,
+		1,0,4,
 		//Top face
-		1,7,3,
-		7,5,3,
+		3,7,5,
+		5,1,3,
 		//Bottom face
-		0,4,6,
-		0,2,4
+		2,6,4,
+		4,0,2
 	};
 
 	D3D10_BUFFER_DESC indexBD;

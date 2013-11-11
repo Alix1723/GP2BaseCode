@@ -33,6 +33,8 @@ public:
 	void clear(float r,float g,float b,float a);
 	void present();
 	void render();
+	void positionObject(float x, float y, float z);
+	void rotateObject(float p, float y, float r);
 
 private:
 	bool createDevice(HWND pWindowHandle,int windowWidth, int windowHeight,
@@ -43,8 +45,6 @@ private:
 	bool createBuffer();
 	bool createVertexLayout();
 	void createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &up, float fov, float aspectRatio, float nearClip, float farClip);
-	void positionObject(float x, float y, float z);
-	void rotateObject(float p, float y, float r);
 	bool loadBaseTexture(char * pFilename);
 
 private:
@@ -87,5 +87,5 @@ private:
 	ID3D10EffectVectorVariable * m_pDiffuseMatColourVariable;
 	ID3D10EffectVectorVariable * m_pDiffuseLightColourVariable;
 	ID3D10EffectVectorVariable * m_pDiffuseLightDirectionVariable;
-
+	
 };

@@ -100,12 +100,9 @@ bool CGameApplication::initWindow()
 	return true;
 }
 
-
-
 //called to init the game
 bool CGameApplication::initGame()
 {
-
 	return true;
 }
 
@@ -121,13 +118,14 @@ void CGameApplication::run()
 		update();
 		//render
 		render();
+
 	}
 }
 
 //Render, called to draw one frame of the game
 void CGameApplication::render()
 {
-	m_pRenderer->clear(1.0f,0.0f,0.0f,1.0f);
+	m_pRenderer->clear(0.0f,0.0f,0.0f,1.0f);
 	m_pRenderer->render();
 	m_pRenderer->present();
 }
@@ -135,5 +133,6 @@ void CGameApplication::render()
 //Update, called to update the game
 void CGameApplication::update()
 {
+	
 }
 
