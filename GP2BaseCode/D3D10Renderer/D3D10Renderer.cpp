@@ -33,26 +33,6 @@ const D3D10_INPUT_ELEMENT_DESC VertexLayout[] =
 	0}
 };
 
-//A simple default Effect
-const char basicEffect[]=\
-	"float4 VS( float4 pos : POSITION ) : SV_POSITION"\
-	"{"\
-	"	return pos;"\
-	"}"\
-	"float4 PS( float4 pos : SV_POSITION ) : SV_Target"\
-	"{"\
-	"		return float4 ( 1.0f, 1.0f, 1.0f, 1.0f );"\
-	"}"\
-	"technique10 Render"\
-	"{"\
-	"		pass P0"\
-	"		{"\
-	"			SetVertexShader( CompileShader( vs_4_0, VS() ) );"\
-	"			SetGeometryShader( NULL );"\
-	"			SetPixelShader( CompileShader( ps_4_0, PS() ) );"\
-	"		}"\
-	"}";
-
 //Constructor for D3D10Renderer
 D3D10Renderer::D3D10Renderer()
 {	
@@ -106,7 +86,6 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 	HWND window=(HWND)pWindowHandle;			//Window Handle, the object referring to the current window
 	RECT windowRect;							//Window dimensions (X/Y)
 	GetClientRect(window,&windowRect);			//Relative window position for the client
-
 	UINT width=windowRect.right-windowRect.left;		//Window width and height
 	UINT height=windowRect.bottom-windowRect.top;
 
@@ -121,8 +100,8 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if(!createVertexLayout())
 		return false;
-	//if(!loadBaseTexture("Textures/face.png"))
-	//	return false;
+	if(!loadBaseTexture("Textures/face.png"))
+		return false;
 
 	//Creating a view camera
 	XMFLOAT3 cameraPos = XMFLOAT3(0.0f,0.0f,-10.0f);
@@ -137,20 +116,18 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		0.1f,
 		100.0f);
 
-	//Setting colours
+	//Ambient
 	m_AmbientMatColour = XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
 	m_AmbientLightColour = XMFLOAT4(0.5f,0.5f,0.5f,1.0f);
-
+	//Diffuse
 	m_DiffuseMatColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
 	m_DiffuseLightColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
-
 	m_DiffuseLightDirection = XMFLOAT3(1.0f,-1.0f,-1.0f);
-
+	//Specular
 	m_SpecularMatColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
 	m_SpecularLightColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
-	
 	m_SpecularCameraPosition = cameraPos;
-	m_SpecularPower = 15;
+	m_SpecularPower = 3;
 
 	//Moving the object
 	positionObject(0.0f,10.0f,0.0f);
@@ -331,42 +308,6 @@ void D3D10Renderer::render()
 	}
 }
 
-//Load a shader effect from memory
-/*bool D3D10Renderer::loadEffectFromMemory(const char* pMem)
-{
-	DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;			//Do not allow legacy/old syntax in the shader compilation
-	#if defined( DEBUG ) || defined( _DEBUG )
-		dwShaderFlags |= D3D10_SHADER_DEBUG;					//If in debugmode, output verbose debugging information
-	#endif
-	
-		ID3D10Blob * pErrorBuffer = NULL;					//Returns errors with arbitrary size/length
-		if(FAILED(D3DX10CreateEffectFromMemory(pMem,		//Creates the effect from memory
-			strlen(pMem),
-			NULL,
-			NULL,
-			NULL,
-			"fx_4_0",										//Shader level to use, in this case 4.0
-			dwShaderFlags,
-			0,
-			m_pD3D10Device,
-			NULL,
-			NULL,
-			&m_pTempEffect,
-			&pErrorBuffer,
-			NULL )))
-		{
-			OutputDebugStringA((char*)pErrorBuffer->GetBufferPointer());
-			return false;
-		}
-		//DUPLICATED FROM LOADEFFECTFROMFILE() FOR DEBUGGING
-		m_pViewEffectVariable = m_pTempEffect->GetVariableByName("matView")->AsMatrix();
-		m_pProjectionEffectVariable = m_pTempEffect->GetVariableByName("matProjection")->AsMatrix();
-		m_pWorldEffectVariable = m_pTempEffect->GetVariableByName("matWorld")->AsMatrix();
-
-		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
-		return true;
-}*/
-
 //Load a shader effect from an external file
 bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 {	
@@ -405,7 +346,7 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 		m_pDiffuseMatColourVariable = m_pTempEffect->GetVariableByName("diffuseMaterial")->AsVector();
 		m_pDiffuseLightColourVariable = m_pTempEffect->GetVariableByName("diffuseLightColour")->AsVector();
 		m_pDiffuseLightDirectionVariable = m_pTempEffect->GetVariableByName("lightDirection")->AsVector();
-
+		//Specular colours, camera pos and power scalar
 		m_pSpecularMatColourVariable = m_pTempEffect->GetVariableByName("specMaterial")->AsVector();
 		m_pSpecularLightColourVariable = m_pTempEffect->GetVariableByName("specLightColour")->AsVector();
 		m_pSpecularCameraPositionVariable = m_pTempEffect->GetVariableByName("cameraPosition")->AsVector();
@@ -428,8 +369,7 @@ bool D3D10Renderer::createBuffer()
 		//Back
 		{-1.0f,-1.0f,-1.0f,	0.0f,0.5f,-0.5f}, 
 		{-1.0f,1.0f,-1.0f,	0.0f,0.5f,-0.5f}, 
-		{1.0f
-		,-1.0f,-1.0f,	0.0f,-0.5f,-0.5f}, 
+		{1.0f,-1.0f,-1.0f,	0.0f,-0.5f,-0.5f}, 
 		{1.0f,1.0f,-1.0f,	0.0f,-0.5f,-0.5f} 
 	};
 

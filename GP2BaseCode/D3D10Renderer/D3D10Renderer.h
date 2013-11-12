@@ -33,8 +33,6 @@ public:
 	void clear(float r,float g,float b,float a);
 	void present();
 	void render();
-	void positionObject(float x, float y, float z);
-	void rotateObject(float p, float y, float r);
 
 private:
 	bool createDevice(HWND pWindowHandle,int windowWidth, int windowHeight,
@@ -46,6 +44,8 @@ private:
 	bool createVertexLayout();
 	void createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &up, float fov, float aspectRatio, float nearClip, float farClip);
 	bool loadBaseTexture(char * pFilename);
+	void positionObject(float x, float y, float z);
+	void rotateObject(float p, float y, float r);
 
 private:
 	//D3D10 stuff
