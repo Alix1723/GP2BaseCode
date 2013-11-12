@@ -43,7 +43,7 @@ private:
 	bool createBuffer();
 	bool createVertexLayout();
 	void createCamera(XMVECTOR &position, XMVECTOR &focus, XMVECTOR &up, float fov, float aspectRatio, float nearClip, float farClip);
-	bool loadBaseTexture(char * pFilename);
+	bool loadTextures(char * pBaseFilename, char * pLightFilename);
 	void positionObject(float x, float y, float z);
 	void rotateObject(float p, float y, float r);
 
@@ -60,6 +60,7 @@ private:
 	ID3D10Buffer * m_pTempIndexBuffer;
 	ID3D10InputLayout * m_pTempVertexLayout;
 	ID3D10ShaderResourceView * m_pBaseTextureMap;
+	ID3D10ShaderResourceView * m_pLightTextureMap;
 	ID3D10EffectShaderResourceVariable * m_pBaseTextureEffectVariable;
 	
 	//XNA mathematics matrices
@@ -98,4 +99,7 @@ private:
 	ID3D10EffectVectorVariable * m_pSpecularLightColourVariable;
 	ID3D10EffectVectorVariable * m_pSpecularCameraPositionVariable;
 	ID3D10EffectScalarVariable * m_pSpecularPowerVariable;
+
+	ID3D10EffectShaderResourceVariable * m_pBaseMapTextureVariable;
+	ID3D10EffectShaderResourceVariable * m_pLightMapTextureVariable;
 };

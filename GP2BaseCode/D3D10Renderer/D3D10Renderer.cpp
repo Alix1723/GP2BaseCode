@@ -74,8 +74,10 @@ D3D10Renderer::~D3D10Renderer()
 		m_pTempEffect->Release();
 	if (m_pTempVertexLayout)
 		m_pTempVertexLayout->Release();	
-	//if (m_pBaseTextureMap)
-		//m_pBaseTextureMap->Release();
+	if (m_pBaseTextureMap)
+		m_pBaseTextureMap->Release();
+	if (m_pLightTextureMap)
+		m_pLightTextureMap->Release();
 	if(m_pTempIndexBuffer)
 		m_pTempIndexBuffer->Release();
 }
@@ -96,11 +98,11 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if (!createBuffer())
 		return false;
-	if(!loadEffectFromFile("Effects/Specular_Effect.fx"))
+	if(!loadEffectFromFile("Effects/Specular_Effect_Map.fx"))
 		return false;
 	if(!createVertexLayout())
 		return false;
-	if(!loadBaseTexture("Textures/face.png"))
+	if(!loadTextures("Textures/Base_Texture.png","Textures/Lightmap_Texture_A.png"))
 		return false;
 
 	//Creating a view camera
@@ -128,7 +130,7 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 	m_SpecularLightColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
 	m_SpecularCameraPosition = cameraPos;
 	m_SpecularPower = 3;
-
+	
 	//Moving the object
 	positionObject(0.0f,10.0f,0.0f);
 	rotateObject(70.0f,40.0f,0.0f);
@@ -336,8 +338,7 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 		m_pViewEffectVariable = m_pTempEffect->GetVariableByName("matView")->AsMatrix();
 		m_pProjectionEffectVariable = m_pTempEffect->GetVariableByName("matProjection")->AsMatrix();
 		m_pWorldEffectVariable = m_pTempEffect->GetVariableByName("matWorld")->AsMatrix();
-		//Texture
-		//m_pBaseTextureEffectVariable = m_pTempEffect->GetVariableByName("face.png")->AsShaderResource();
+		
 		//Technique
 		//Amb. colours
 		m_pAmbientMatColourVariable = m_pTempEffect->GetVariableByName("ambientMaterial")->AsVector();
@@ -351,6 +352,9 @@ bool D3D10Renderer::loadEffectFromFile(const char* pFilename)
 		m_pSpecularLightColourVariable = m_pTempEffect->GetVariableByName("specLightColour")->AsVector();
 		m_pSpecularCameraPositionVariable = m_pTempEffect->GetVariableByName("cameraPosition")->AsVector();
 		m_pSpecularPowerVariable = m_pTempEffect->GetVariableByName("specPower")->AsScalar();
+		//Textures
+		m_pBaseMapTextureVariable = m_pTempEffect->GetVariableByName("baseMapTexture")->AsShaderResource();
+		m_pLightMapTextureVariable = m_pTempEffect->GetVariableByName("lightMapTexture")->AsShaderResource();
 
 		m_pTempTechnique = m_pTempEffect->GetTechniqueByName("Render");	//Set the temporary technique to the "Render" effect within m_pTempEffect
 		return true;
@@ -476,11 +480,11 @@ void D3D10Renderer::rotateObject(float p, float y, float r)
 }
 
 //Loads a texture (view) from a file
-bool D3D10Renderer::loadBaseTexture(char * pFilename)
+bool D3D10Renderer::loadTextures(char * pBaseFilename, char* pLightFilename)
 {
 	if(FAILED(D3DX10CreateShaderResourceViewFromFileA(
 		m_pD3D10Device,
-		pFilename,
+		pBaseFilename,
 		NULL,
 		NULL,
 		&m_pBaseTextureMap,
@@ -488,5 +492,17 @@ bool D3D10Renderer::loadBaseTexture(char * pFilename)
 		{
 			return false;
 		}
+
+	if(FAILED(D3DX10CreateShaderResourceViewFromFileA(
+		m_pD3D10Device,
+		pLightFilename,
+		NULL,
+		NULL,
+		&m_pLightTextureMap,
+		NULL)))
+		{
+			return false;
+		}
+
 	return true;
 }
