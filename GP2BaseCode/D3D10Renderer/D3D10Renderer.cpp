@@ -121,8 +121,8 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 		return false;
 	if(!createVertexLayout())
 		return false;
-	//if(!loadBaseTexture("Textures/face.png"))
-	//	return false;
+	if(!loadBaseTexture("Textures/face.png"))
+		return false;
 
 	//Creating a view camera
 	XMFLOAT3 cameraPos = XMFLOAT3(0.0f,0.0f,-10.0f);
@@ -150,7 +150,7 @@ bool D3D10Renderer::init(void *pWindowHandle,bool fullScreen)
 	m_SpecularLightColour = XMFLOAT4(1.0f,1.0f,1.0f,1.0f);
 	
 	m_SpecularCameraPosition = cameraPos;
-	m_SpecularPower = 15;
+	m_SpecularPower = 3;
 
 	//Moving the object
 	positionObject(0.0f,10.0f,0.0f);
